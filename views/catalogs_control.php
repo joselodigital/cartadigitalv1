@@ -67,14 +67,6 @@ try {
     <meta charset="UTF-8">
     <title>Control de Catálogos</title>
     <link rel="stylesheet" href="public/css/style.css">
-    <style>
-        .tabs { display: flex; gap: 10px; margin-bottom: 15px; }
-        .tab-btn { background:#6c757d; padding:8px 12px; border-radius:4px; color:#fff; cursor:pointer; border:none; }
-        .tab-btn.active { background:#007bff; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .badge { display:inline-block; padding:3px 8px; border-radius:12px; font-size:0.8em; background:#eee; color:#333; }
-    </style>
     <script>
         function showTab(tabId) {
             var tabs = document.querySelectorAll('.tab-content');
@@ -231,5 +223,9 @@ try {
             </div>
         </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script>
+        feather.replace();
+    </script>
 </body>
 </html>

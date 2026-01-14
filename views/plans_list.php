@@ -12,61 +12,6 @@ $plans = $stmt->fetchAll();
     <meta charset="UTF-8">
     <title>Gestión de Planes y Suscripciones</title>
     <link rel="stylesheet" href="public/css/style.css">
-    <style>
-        .modal {
-            display: none; 
-            position: fixed; 
-            z-index: 1000; 
-            left: 0;
-            top: 0;
-            width: 100%; 
-            height: 100%; 
-            overflow: auto; 
-            background-color: rgba(0,0,0,0.5);
-            backdrop-filter: blur(4px);
-        }
-        .modal-content {
-            background-color: var(--bg-card);
-            color: var(--text-main);
-            margin: 5% auto;
-            padding: 24px;
-            border: 1px solid var(--border-color);
-            width: 500px;
-            border-radius: 16px;
-            box-shadow: var(--shadow-lg);
-        }
-        .close {
-            color: var(--text-muted);
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-        .close:hover { color: var(--text-main); }
-        
-        .feature-badge {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 0.8em;
-            margin: 2px;
-        }
-        .badge-green { background: #d4edda; color: #155724; }
-        .badge-red { background: #f8d7da; color: #721c24; }
-        .badge-blue { background: #cce5ff; color: #004085; }
-        .badge-gray { background: #e2e3e5; color: #383d41; }
-        .status-dot {
-            height: 10px;
-            width: 10px;
-            background-color: #bbb;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 5px;
-        }
-        .status-active { background-color: #28a745; }
-        .status-inactive { background-color: #dc3545; }
-    </style>
 </head>
 <body class="admin-body">
     <?php include 'views/partials/sidebar_super.php'; ?>
@@ -257,6 +202,10 @@ $plans = $stmt->fetchAll();
                 document.getElementById('createModal').style.display = 'none';
             }
         }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script>
+        feather.replace();
     </script>
 </body>
 </html>

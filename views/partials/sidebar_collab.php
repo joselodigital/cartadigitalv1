@@ -19,3 +19,4 @@
         </a>
     </nav>
 </div>
+<div class="sidebar-overlay"></div>

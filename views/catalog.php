@@ -265,6 +265,22 @@ $has_payment_methods = count($payment_methods) > 0 || !empty($business['payment_
                     </div>
                 <?php endforeach; ?>
             </div>
+            
+            <!-- Mobile Pagination Controls -->
+            <div id="paginationControls" style="display:none; text-align:center; margin-top:30px; padding-bottom: 20px;">
+                <div style="display: inline-flex; align-items: center; gap: 15px; background: var(--bg-surface); padding: 8px 20px; border-radius: 50px; box-shadow: var(--shadow-sm); border: 1px solid var(--border);">
+                    <button id="btnPrevPage" class="btn-pagination-control" style="background:none; border:none; cursor:pointer; padding:5px; color:var(--text-secondary);">
+                        <i data-feather="chevron-left"></i>
+                    </button>
+                    <span id="pageIndicator" style="font-weight:600; font-size:0.95rem; color:var(--text-main); min-width: 60px; text-align:center;">
+                        1 / 1
+                    </span>
+                    <button id="btnNextPage" class="btn-pagination-control" style="background:none; border:none; cursor:pointer; padding:5px; color:var(--text-main);">
+                        <i data-feather="chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+
             <div id="noResults" class="empty-state-container" style="display:none;">
                 <i data-feather="search" class="empty-state-icon opacity-50"></i>
                 <h3><?php echo $lang['no_results']; ?></h3>
@@ -762,24 +778,155 @@ $has_payment_methods = count($payment_methods) > 0 || !empty($business['payment_
             }
         }
 
-        // Search
+        // Search & Pagination Logic
+        const mobilePagination = {
+            currentPage: 1,
+            itemsPerPage: 4,
+            isActive: false,
+            totalPages: 1,
+            
+            init: function() {
+                this.check();
+                window.addEventListener('resize', () => this.check());
+                
+                const btnPrev = document.getElementById('btnPrevPage');
+                const btnNext = document.getElementById('btnNextPage');
+                
+                if(btnPrev) btnPrev.addEventListener('click', () => this.changePage(-1));
+                if(btnNext) btnNext.addEventListener('click', () => this.changePage(1));
+            },
+
+            check: function() {
+                const searchVal = document.getElementById('searchInput').value.trim();
+                if (searchVal !== '') return;
+
+                if (window.innerWidth <= 768) {
+                    // Mobile
+                    if (!this.isActive) {
+                        this.start();
+                    } else {
+                        this.updateVisibility();
+                    }
+                } else {
+                    // Desktop
+                    if (this.isActive) {
+                        this.stop();
+                    }
+                }
+            },
+
+            start: function() {
+                this.isActive = true;
+                this.currentPage = 1; 
+                this.updateVisibility();
+            },
+
+            stop: function() {
+                this.isActive = false;
+                document.querySelectorAll('.product-card').forEach(c => c.style.display = 'flex');
+                const container = document.getElementById('paginationControls');
+                if(container) container.style.display = 'none';
+            },
+
+            changePage: function(direction) {
+                const newPage = this.currentPage + direction;
+                if (newPage >= 1 && newPage <= this.totalPages) {
+                    this.currentPage = newPage;
+                    this.updateVisibility();
+                    // Scroll to top of grid
+                    const grid = document.getElementById('productGrid');
+                    if(grid) grid.scrollIntoView({behavior: 'smooth', block: 'start'});
+                }
+            },
+
+            updateVisibility: function() {
+                if (!this.isActive) return;
+
+                const cards = Array.from(document.querySelectorAll('.product-card'));
+                const totalItems = cards.length;
+                this.totalPages = Math.ceil(totalItems / this.itemsPerPage);
+                
+                // Adjust current page if out of bounds (e.g. after search filter clear)
+                if (this.currentPage > this.totalPages) this.currentPage = this.totalPages || 1;
+                if (this.currentPage < 1) this.currentPage = 1;
+
+                const start = (this.currentPage - 1) * this.itemsPerPage;
+                const end = start + this.itemsPerPage;
+
+                cards.forEach((card, index) => {
+                    if (index >= start && index < end) {
+                        card.style.display = 'flex';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+
+                // Update UI Controls
+                const container = document.getElementById('paginationControls');
+                const indicator = document.getElementById('pageIndicator');
+                const btnPrev = document.getElementById('btnPrevPage');
+                const btnNext = document.getElementById('btnNextPage');
+
+                if (container && indicator) {
+                    // Only show controls if there is more than 1 page
+                    if (this.totalPages > 1) {
+                        container.style.display = 'block';
+                        indicator.textContent = `${this.currentPage} / ${this.totalPages}`;
+                        
+                        // Update button states
+                        if (btnPrev) {
+                            btnPrev.disabled = this.currentPage === 1;
+                            btnPrev.style.opacity = this.currentPage === 1 ? '0.3' : '1';
+                        }
+                        if (btnNext) {
+                            btnNext.disabled = this.currentPage === this.totalPages;
+                            btnNext.style.opacity = this.currentPage === this.totalPages ? '0.3' : '1';
+                        }
+                    } else {
+                        container.style.display = 'none';
+                    }
+                }
+            }
+        };
+
         function filterProducts() {
             const query = document.getElementById('searchInput').value.toLowerCase();
             const cards = document.querySelectorAll('.product-card');
             let hasResults = false;
 
-            cards.forEach(card => {
-                const name = card.getAttribute('data-name');
-                if (name.includes(query)) {
-                    card.style.display = 'flex'; // Restore flex (important for mobile list layout)
-                    hasResults = true;
+            if (query.length > 0) {
+                // Search Mode: Disable pagination UI
+                const container = document.getElementById('paginationControls');
+                if(container) container.style.display = 'none';
+                
+                cards.forEach(card => {
+                    const name = card.getAttribute('data-name');
+                    if (name.includes(query)) {
+                        card.style.display = 'flex'; 
+                        hasResults = true;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            } else {
+                // Search Cleared: Restore appropriate view
+                if (window.innerWidth <= 768) {
+                    mobilePagination.start();
+                    hasResults = cards.length > 0;
                 } else {
-                    card.style.display = 'none';
+                    cards.forEach(card => card.style.display = 'flex');
+                    hasResults = cards.length > 0;
+                    mobilePagination.stop();
                 }
-            });
+            }
 
             document.getElementById('noResults').style.display = hasResults ? 'none' : 'block';
         }
+
+        // Initialize Pagination
+        document.addEventListener('DOMContentLoaded', () => {
+            mobilePagination.init();
+        });
 
         // Initialize
         updateCartUI();

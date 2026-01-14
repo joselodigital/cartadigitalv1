@@ -44,10 +44,6 @@ if (!$settings) {
     <meta charset="UTF-8">
     <title>Ajustes del Sistema</title>
     <link rel="stylesheet" href="public/css/style.css">
-    <style>
-        .preview { display:flex; align-items:center; gap:12px; margin:10px 0; }
-        .preview img { max-height:50px; border-radius:4px; }
-    </style>
 </head>
 <body class="admin-body">
     <?php include 'views/partials/sidebar_super.php'; ?>
@@ -83,6 +79,10 @@ if (!$settings) {
             </form>
         </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script>
+        feather.replace();
+    </script>
 </body>
 </html>
 

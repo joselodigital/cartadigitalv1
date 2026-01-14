@@ -40,39 +40,7 @@ $businesses = $stmt->fetchAll();
     <meta charset="UTF-8">
     <title>Gestión de Usuarios - Super Admin</title>
     <link rel="stylesheet" href="public/css/style.css">
-    <style>
-        .modal {
-            display: none; 
-            position: fixed; 
-            z-index: 1000; 
-            left: 0;
-            top: 0;
-            width: 100%; 
-            height: 100%; 
-            overflow: auto; 
-            background-color: rgba(0,0,0,0.5);
-            backdrop-filter: blur(4px);
-        }
-        .modal-content {
-            background-color: var(--bg-card);
-            color: var(--text-main);
-            margin: 10% auto;
-            padding: 24px;
-            border: 1px solid var(--border-color);
-            width: 500px;
-            border-radius: 16px;
-            box-shadow: var(--shadow-lg);
-        }
-        .close {
-            color: var(--text-muted);
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-        .close:hover { color: var(--text-main); }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
 </head>
 <body class="admin-body">
     <?php include 'views/partials/sidebar_super.php'; ?>
@@ -280,6 +248,7 @@ $businesses = $stmt->fetchAll();
                 closeEditModal();
             }
         }
+        feather.replace();
     </script>
 </body>
 </html>

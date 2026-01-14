@@ -9,9 +9,22 @@ $stmt = $pdo->prepare("SELECT * FROM businesses WHERE id = ?");
 $stmt->execute([$business_id]);
 $business = $stmt->fetch();
 
-// Fetch Products
-$stmt = $pdo->prepare("SELECT * FROM products WHERE business_id = ? ORDER BY created_at DESC");
+// Fetch Products with Pagination
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$limit = 10;
+$offset = ($page - 1) * $limit;
+
+// Count total products for pagination
+$stmt = $pdo->prepare("SELECT COUNT(*) as total FROM products WHERE business_id = ?");
 $stmt->execute([$business_id]);
+$total_products_pagination = $stmt->fetch()['total'];
+$total_pages = ceil($total_products_pagination / $limit);
+
+$stmt = $pdo->prepare("SELECT * FROM products WHERE business_id = :business_id ORDER BY created_at DESC LIMIT :limit OFFSET :offset");
+$stmt->bindValue(':business_id', $business_id, PDO::PARAM_INT);
+$stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+$stmt->execute();
 $products = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>
@@ -29,7 +42,12 @@ $products = $stmt->fetchAll();
     <?php include 'views/partials/sidebar_collab.php'; ?>
 
     <div class="content">
-        <h1>Panel de Colaborador</h1>
+        <div style="display:flex; align-items:center; gap:15px; margin-bottom:20px;">
+            <button id="sidebar-toggle" class="sidebar-toggle">
+                <i data-feather="menu"></i>
+            </button>
+            <h1 style="margin:0;">Panel de Colaborador</h1>
+        </div>
 
         <div class="card">
             <h2>Reportar problema al Super Admin</h2>
@@ -93,6 +111,27 @@ $products = $stmt->fetchAll();
                     <?php endforeach; ?>
                 </tbody>
             </table>
+
+            <!-- Pagination Controls -->
+            <?php if ($total_pages > 1): ?>
+            <div class="pagination-container" style="display:flex; justify-content:center; align-items:center; gap:10px; margin-top:20px;">
+                <?php if ($page > 1): ?>
+                    <a href="?page=<?php echo $page - 1; ?>" class="btn btn-sm btn-secondary" style="display:flex; align-items:center; gap:5px;">
+                        <i data-feather="chevron-left" style="width:16px;"></i> Anterior
+                    </a>
+                <?php endif; ?>
+                
+                <span style="font-weight:600; color:var(--text-secondary); font-size:0.9rem;">
+                    Página <?php echo $page; ?> de <?php echo $total_pages; ?>
+                </span>
+
+                <?php if ($page < $total_pages): ?>
+                    <a href="?page=<?php echo $page + 1; ?>" class="btn btn-sm btn-secondary" style="display:flex; align-items:center; gap:5px;">
+                        Siguiente <i data-feather="chevron-right" style="width:16px;"></i>
+                    </a>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -152,6 +191,25 @@ $products = $stmt->fetchAll();
         window.onclick = function(event) {
             if (event.target.className === 'modal') {
                 event.target.style.display = "none";
+            }
+        }
+
+        // Sidebar Toggle Logic
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const sidebar = document.querySelector('.sidebar');
+        const sidebarOverlay = document.querySelector('.sidebar-overlay');
+
+        if (sidebarToggle && sidebar) {
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('active');
+                if (sidebarOverlay) sidebarOverlay.classList.toggle('active');
+            });
+            
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', function() {
+                    sidebar.classList.remove('active');
+                    sidebarOverlay.classList.remove('active');
+                });
             }
         }
     </script>

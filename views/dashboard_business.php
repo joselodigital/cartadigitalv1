@@ -9,9 +9,22 @@ $stmt = $pdo->prepare("SELECT * FROM businesses WHERE id = ?");
 $stmt->execute([$business_id]);
 $business = $stmt->fetch();
 
-// Fetch Products
-$stmt = $pdo->prepare("SELECT * FROM products WHERE business_id = ? ORDER BY created_at DESC");
+// Fetch Products with Pagination
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$limit = 10;
+$offset = ($page - 1) * $limit;
+
+// Count total products for pagination
+$stmt = $pdo->prepare("SELECT COUNT(*) as total FROM products WHERE business_id = ?");
 $stmt->execute([$business_id]);
+$total_products_pagination = $stmt->fetch()['total'];
+$total_pages = ceil($total_products_pagination / $limit);
+
+$stmt = $pdo->prepare("SELECT * FROM products WHERE business_id = :business_id ORDER BY created_at DESC LIMIT :limit OFFSET :offset");
+$stmt->bindValue(':business_id', $business_id, PDO::PARAM_INT);
+$stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+$stmt->execute();
 $products = $stmt->fetchAll();
 
 // Fetch Collaborators
@@ -65,115 +78,21 @@ $currency_symbol = $currency_symbols[$currency_code] ?? '$';
     <link rel="stylesheet" href="public/css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
     <style>
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 24px;
-        }
-        @media (max-width: 1024px) {
-            .dashboard-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-        .product-card-item {
-            display: flex;
-            align-items: center;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 10px;
-            margin-bottom: 10px;
-            transition: all 0.2s;
-        }
-        .product-card-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            border-color: var(--primary-color);
-        }
-        .product-img {
-            width: 60px;
-            height: 60px;
-            object-fit: cover;
-            border-radius: 6px;
-            background: var(--bg-main);
-        }
-        .product-info {
-            flex: 1;
-            margin-left: 15px;
-        }
-        .product-actions {
-            display: flex;
-            gap: 8px;
-        }
-        .action-btn {
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .edit-btn { background: #e0e7ff; color: #4338ca; }
-        .edit-btn:hover { background: #4338ca; color: white; }
-        .delete-btn { background: #fee2e2; color: #dc2626; }
-        .delete-btn:hover { background: #dc2626; color: white; }
-        
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        .tab-menu {
-            display: flex;
-            gap: 20px;
-            border-bottom: 2px solid #eee;
-            margin-bottom: 24px;
-        }
-        .tab-link {
-            padding: 10px 0;
-            cursor: pointer;
-            color: var(--text-muted);
-            font-weight: 500;
-            position: relative;
-        }
-        .tab-link.active {
-            color: var(--primary-color);
-        }
-        .tab-link.active::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background: var(--primary-color);
-        }
-        .form-section {
-            background: #f8fafc;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-        @media (max-width: 768px) {
-            .form-grid { grid-template-columns: 1fr; }
-        }
+        /* Specific styles for business dashboard if any not covered by style.css */
     </style>
 </head>
 <body class="admin-body">
     <?php include 'views/partials/sidebar_business.php'; ?>
+    <div class="sidebar-overlay"></div>
 
     <div class="content">
         <div class="section-header">
-            <h1>Panel de Administración</h1>
+            <div style="display:flex; align-items:center; gap:15px;">
+                <button id="sidebar-toggle" class="sidebar-toggle">
+                    <i data-feather="menu"></i>
+                </button>
+                <h1>Panel de Administración</h1>
+            </div>
             <div class="user-profile">
                 <div class="user-info">
                     <div class="user-name"><?php echo htmlspecialchars($business['name']); ?></div>
@@ -272,6 +191,27 @@ $currency_symbol = $currency_symbols[$currency_code] ?? '$';
                             </div>
                         </div>
                     <?php endforeach; ?>
+
+                    <!-- Pagination Controls -->
+                    <?php if ($total_pages > 1): ?>
+                    <div class="pagination-container" style="display:flex; justify-content:center; align-items:center; gap:10px; margin-top:20px; padding-top:20px; border-top:1px solid #eee;">
+                        <?php if ($page > 1): ?>
+                            <a href="?page=<?php echo $page - 1; ?>#products" class="btn btn-sm btn-secondary" style="display:flex; align-items:center; gap:5px;">
+                                <i data-feather="chevron-left" style="width:16px;"></i> Anterior
+                            </a>
+                        <?php endif; ?>
+                        
+                        <span style="font-weight:600; color:var(--text-secondary); font-size:0.9rem;">
+                            Página <?php echo $page; ?> de <?php echo $total_pages; ?>
+                        </span>
+
+                        <?php if ($page < $total_pages): ?>
+                            <a href="?page=<?php echo $page + 1; ?>#products" class="btn btn-sm btn-secondary" style="display:flex; align-items:center; gap:5px;">
+                                Siguiente <i data-feather="chevron-right" style="width:16px;"></i>
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                    <?php endif; ?>
                 <?php else: ?>
                     <div style="text-align:center; padding:40px; color:#64748b;">
                         <i data-feather="package" style="width:48px; height:48px; opacity:0.5; margin-bottom:10px;"></i>
@@ -625,6 +565,48 @@ $currency_symbol = $currency_symbols[$currency_code] ?? '$';
     // Initialize Feather Icons
     feather.replace();
 
+    // Sidebar Toggle Logic
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const sidebar = document.querySelector('.sidebar');
+    const sidebarOverlay = document.querySelector('.sidebar-overlay');
+
+    if (sidebarToggle && sidebar) {
+        sidebarToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('active');
+            if (sidebarOverlay) sidebarOverlay.classList.toggle('active');
+        });
+        
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', function() {
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+            });
+        }
+    }
+
+    // Restore tab on load from Hash or LocalStorage
+    document.addEventListener('DOMContentLoaded', () => {
+        // Priority 1: URL Hash (e.g. #products)
+        const hash = window.location.hash.replace('#', '');
+        if(hash && document.getElementById('tab-' + hash)) {
+            switchTab(hash);
+        } else {
+            // Priority 2: LocalStorage
+            const savedTab = localStorage.getItem('dashboard_tab');
+            if(savedTab && document.getElementById('tab-' + savedTab)) {
+                switchTab(savedTab);
+            }
+        }
+    });
+
+    // Listen for hash changes (Sidebar links)
+    window.addEventListener('hashchange', () => {
+        const hash = window.location.hash.replace('#', '');
+        if(hash && document.getElementById('tab-' + hash)) {
+            switchTab(hash);
+        }
+    });
+
     function switchTab(tabName) {
         // Hide all tabs
         document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
@@ -638,18 +620,18 @@ $currency_symbol = $currency_symbols[$currency_code] ?? '$';
                 link.classList.add('active');
             }
         });
+
+        // Close Sidebar on Mobile if open
+        const sidebar = document.querySelector('.sidebar');
+        const sidebarOverlay = document.querySelector('.sidebar-overlay');
+        if (sidebar && sidebar.classList.contains('active')) {
+            sidebar.classList.remove('active');
+            if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+        }
         
         // Save to localStorage
         localStorage.setItem('dashboard_tab', tabName);
     }
-
-    // Restore tab on load
-    document.addEventListener('DOMContentLoaded', () => {
-        const savedTab = localStorage.getItem('dashboard_tab');
-        if(savedTab && document.getElementById('tab-' + savedTab)) {
-            switchTab(savedTab);
-        }
-    });
 
     function openEditProduct(id, name, desc, price, stock) {
         document.getElementById('edit-prod-id').value = id;
@@ -665,36 +647,6 @@ $currency_symbol = $currency_symbols[$currency_code] ?? '$';
         if (event.target.className === 'modal') {
             event.target.style.display = "none";
         }
-    }
-
-    function submitNewPaymentMethod() {
-        const name = document.getElementById('new_method_name').value;
-        const details = document.getElementById('new_method_details').value;
-        const img = document.getElementById('new_method_img').files[0];
-
-        if (!name) {
-            alert('El nombre del método es obligatorio');
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append('method_name', name);
-        formData.append('account_details', details);
-        if (img) formData.append('qr_image', img);
-
-        fetch('actions/payment_method_add.php', {
-            method: 'POST',
-            body: formData
-        }).then(response => {
-            if (response.redirected) {
-                window.location.href = response.url;
-            } else {
-                window.location.reload();
-            }
-        }).catch(error => {
-            console.error('Error:', error);
-            alert('Error al guardar');
-        });
     }
     </script>
 </body>

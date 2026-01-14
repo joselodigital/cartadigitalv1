@@ -49,11 +49,7 @@ if (!$settings) {
     <meta charset="UTF-8">
     <title>WhatsApp Inteligente</title>
     <link rel="stylesheet" href="public/css/style.css">
-    <style>
-        .hint { color:#666; font-size:0.9em; }
-        code { background:#f8f9fa; padding:2px 6px; border-radius:4px; }
-    </style>
-    </head>
+</head>
 <body class="admin-body">
     <?php include 'views/partials/sidebar_super.php'; ?>
 
@@ -93,5 +89,9 @@ if (!$settings) {
             </form>
         </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script>
+        feather.replace();
+    </script>
 </body>
 </html>

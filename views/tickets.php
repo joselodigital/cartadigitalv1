@@ -91,5 +91,9 @@ $tickets = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </table>
         </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script>
+        feather.replace();
+    </script>
 </body>
 </html>

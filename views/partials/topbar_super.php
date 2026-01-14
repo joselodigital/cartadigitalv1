@@ -1,4 +1,7 @@
 <div class="topbar">
+    <button id="sidebar-toggle" class="sidebar-toggle">
+        <i data-feather="menu"></i>
+    </button>
     <!-- Search Bar -->
     <div class="search-container">
         <form action="index.php" method="GET" style="margin:0;">
@@ -26,6 +29,25 @@
 </div>
 
 <script>
+    // Sidebar Toggle Logic
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const sidebar = document.querySelector('.sidebar');
+    const sidebarOverlay = document.querySelector('.sidebar-overlay');
+
+    if (sidebarToggle && sidebar) {
+        sidebarToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('active');
+            if (sidebarOverlay) sidebarOverlay.classList.toggle('active');
+        });
+        
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', function() {
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+            });
+        }
+    }
+
     // Dark Mode Logic
     (function() {
         const toggleBtn = document.getElementById('dark-mode-toggle');
