@@ -75,7 +75,7 @@ $currency_symbol = $currency_symbols[$currency_code] ?? '$';
 <head>
     <meta charset="UTF-8">
     <title>Dashboard Negocio - <?php echo htmlspecialchars($business['name']); ?></title>
-    <link rel="stylesheet" href="public/css/style.css">
+    <link rel="stylesheet" href="public/css/style.css?v=<?php echo time(); ?>">
     <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
     <style>
         /* Specific styles for business dashboard if any not covered by style.css */

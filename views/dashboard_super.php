@@ -77,7 +77,7 @@ $users = $stmt->fetchAll();
 <head>
     <meta charset="UTF-8">
     <title>Dashboard Super Admin</title>
-    <link rel="stylesheet" href="public/css/style.css">
+    <link rel="stylesheet" href="public/css/style.css?v=<?php echo time(); ?>">
     <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
 </head>
 <body class="admin-body">
